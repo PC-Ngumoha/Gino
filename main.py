@@ -6,6 +6,9 @@ import os
 import random
 from math import fabs
 
+# Game Entities import
+from dino import Dino
+
 pygame.init()
 
 # Constants
@@ -37,16 +40,6 @@ HORIZON = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Horizon.png')), (SCREEN_WIDTH - 0, 10)).convert_alpha()
 CLOUD = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Cloud.png')), (CLOUD_WIDTH, CLOUD_HEIGHT)).convert_alpha()
-
-DINO_STANDING = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Standing.png')), (DINO_WIDTH, DINO_HEIGHT)).convert_alpha()
-
-DINO_LEFT = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Left_Run.png')), (DINO_WIDTH, DINO_HEIGHT)).convert_alpha()
-
-DINO_RIGHT = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Right_Run.png')), (DINO_WIDTH, DINO_HEIGHT)).convert_alpha()
-
 ONE_CACTUS = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', '1_Cactus.png')), (OBSTACLE_WIDTH, OBSTACLE_HEIGHT)).convert_alpha()
 
@@ -58,7 +51,6 @@ ADD_OBSTACLES = pygame.USEREVENT + 3
 
 # Timers
 pygame.time.set_timer(SWITCH_FOOT, 125)
-# pygame.time.set_timer(ADD_OBSTACLES, 1200)
 
 horizon_width = HORIZON.get_width()
 horizon_scroll_x = 0
@@ -73,6 +65,7 @@ def draw_window(dino, clouds, obstacles, play=True):
     global horizon_scroll_x
     global obstacle_scroll_x
     global cloud_scroll_x
+    global left_foot
 
     horizon_tiles = 3
 
@@ -97,7 +90,7 @@ def draw_window(dino, clouds, obstacles, play=True):
 
     # Normal game play if ON, static image if OFF
     if play:
-        make_dino_move(dino)
+        dino.move(left_foot)
 
         horizon_scroll_x -= HORIZON_VEL
         obstacle_scroll_x -= HORIZON_VEL
@@ -109,21 +102,11 @@ def draw_window(dino, clouds, obstacles, play=True):
 
     else:
         # Dino stands
-        WINDOW.blit(DINO_STANDING, (dino.x, dino.y))
+        # WINDOW.blit(DINO_STANDING, (dino.x, dino.y))
+        dino.stand()
 
+    dino.update(WINDOW)
     pygame.display.update()
-
-
-def make_dino_move(dino):
-    global left_foot
-
-    # Switch between Dino sprites to create illusion of left..right motion.
-    if left_foot:
-        WINDOW.blit(DINO_LEFT, (dino.x, dino.y))
-        # left_foot = False
-    else:
-        WINDOW.blit(DINO_RIGHT, (dino.x, dino.y))
-        # left_foot = True
 
 
 def main():
@@ -136,7 +119,8 @@ def main():
     clock = pygame.time.Clock()
 
     # Create bounding box for Dino
-    dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
+    # dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
+    dino = Dino(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
 
     # Generate a random number of clouds to move in parallax
     clouds = [pygame.Rect((i+1) * 200, (i+1) * 15, CLOUD_WIDTH, CLOUD_HEIGHT)
