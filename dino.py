@@ -23,13 +23,16 @@ class Dino:
         self.width = width
         self.height = height
         self.image = self._scale_sprite_image(DINO_STANDING)
-        self.rect = pygame.Rect(x, y, width, height)
+        # self.rect = pygame.Rect(x, y, width, height)
+        self.left_foot = True
 
     def update(self, screen):
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        """Display changes on screen"""
+        screen.blit(self.image, (self.x, self.y))
 
-    def move(self, left_foot):
-        if left_foot:
+    def move(self):
+        """Create the illusion of foots switching"""
+        if self.left_foot:
             self.image = self._scale_sprite_image(DINO_LEFT)
         else:
             self.image = self._scale_sprite_image(DINO_RIGHT)
@@ -39,8 +42,13 @@ class Dino:
         return pygame.transform.scale(image, (self.width, self.height)).convert_alpha()
 
     def stand(self):
+        """Take a standing posture"""
         self.image = self._scale_sprite_image(DINO_STANDING)
 
-    def update_rect(self):
-        self.rect.x = self.x
-        self.rect.y = self.y
+    def switch_foot(self):
+        """Switch from left to right foot and vice versa."""
+        self.left_foot = not self.left_foot
+
+    # def update_rect(self):
+    #     self.rect.x = self.x
+    #     self.rect.y = self.y
