@@ -25,9 +25,9 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 720, 400
 # Setup
 WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 DINO_X_POS = 30
-DINO_Y_POS = SCREEN_HEIGHT//2 + SCREEN_HEIGHT//8 - DINO_HEIGHT + 15
-OBSTACLE_Y_POS = SCREEN_HEIGHT//2 + SCREEN_HEIGHT//8 - OBSTACLE_HEIGHT + 15
-OBSTACLE_DISTANCES = (50, 75, 100)
+DINO_Y_POS = SCREEN_HEIGHT//2 - DINO_HEIGHT + 15
+OBSTACLE_Y_POS = SCREEN_HEIGHT//2 - OBSTACLE_HEIGHT + 15
+OBSTACLE_DISTANCES = (50, 400, 450, 500)
 
 pygame.display.set_caption("Gino")
 
@@ -57,7 +57,7 @@ ADD_OBSTACLES = pygame.USEREVENT + 3
 
 # Timers
 pygame.time.set_timer(SWITCH_FOOT, 125)
-# pygame.time.set_timer(ADD_OBSTACLES, 1200)
+pygame.time.set_timer(ADD_OBSTACLES, 1200)
 
 horizon_width = HORIZON.get_width()
 horizon_scroll_x = 0
@@ -70,8 +70,8 @@ def draw_window(clouds, obstacles, play=True):
     """Handles repainting of screen surface
     """
     global horizon_scroll_x
-    global obstacle_scroll_x
     global cloud_scroll_x
+    global obstacle_scroll_x
 
     horizon_tiles = 3
 
@@ -84,15 +84,11 @@ def draw_window(clouds, obstacles, play=True):
     # Render parallax horizon
     for i in range(0, horizon_tiles):
         WINDOW.blit(HORIZON, (i * horizon_width +
-                    horizon_scroll_x, SCREEN_HEIGHT//2 + SCREEN_HEIGHT//8))
+                    horizon_scroll_x, SCREEN_HEIGHT//2))
 
     # Render obstacles on path
     for obstacle in obstacles:
         WINDOW.blit(ONE_CACTUS, (obstacle.x + obstacle_scroll_x, obstacle.y))
-
-    # Raise ADD_OBSTACLES event when the last of the obstacles goes off screen
-    if (obstacles[-1].x + obstacle_scroll_x + 100) < 0:
-        pygame.event.post(pygame.event.Event(ADD_OBSTACLES))
 
     # Normal game play if ON, static image if OFF
     if play:
@@ -105,7 +101,6 @@ def draw_window(clouds, obstacles, play=True):
         if fabs(horizon_scroll_x) > horizon_width:
             pygame.event.post(pygame.event.Event(GENERATE_MORE_CLOUDS))
             horizon_scroll_x = 0
-
     else:
         # Dino stands
         WINDOW.blit(DINO_STANDING, (DINO_X_POS, DINO_Y_POS))
@@ -139,8 +134,8 @@ def main():
               for i in range(random.randint(1, 3))]
 
     # Generate random number of obstacles to be placed on the road
-    obstacles = [pygame.Rect(SCREEN_WIDTH + 10 + i*50, OBSTACLE_Y_POS, OBSTACLE_WIDTH,
-                             OBSTACLE_HEIGHT) for i in range(random.randint(1, 3)) for i in range(random.randint(1, 3))]
+    obstacles = [pygame.Rect(SCREEN_WIDTH + 10, OBSTACLE_Y_POS, OBSTACLE_WIDTH,
+                             OBSTACLE_HEIGHT) for i in range(random.randint(1, 3))]
 
     while game_running:
         # Poll for events
@@ -183,12 +178,11 @@ def main():
 
                 # Handling the event to add obstacles to path
                 if event.type == ADD_OBSTACLES:
-                    obstacle_x = obstacles[-1].x + (SCREEN_WIDTH + 100)
-
-                    obstacles.clear()  # Clear previous obstacles
-
-                    obstacles.extend([pygame.Rect(obstacle_x + i*50, OBSTACLE_Y_POS,
-                                     OBSTACLE_WIDTH, OBSTACLE_HEIGHT) for i in range(random.randint(1, 3))])
+                    obstacle_x = obstacles[-1].x
+                    obstacles.extend([pygame.Rect(obstacle_x + (i+1) * random.choice(OBSTACLE_DISTANCES),
+                                                  OBSTACLE_Y_POS, OBSTACLE_WIDTH,
+                                                  OBSTACLE_HEIGHT)
+                                      for i in range(random.randint(1, 3))])
 
             # Draw window for subsequent screen.
             draw_window(clouds, obstacles)
