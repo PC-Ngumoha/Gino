@@ -10,10 +10,7 @@ pygame.init()
 
 # Constants
 FPS = 60
-HORIZON_VEL = 0.8
-CLOUD_VEL = 0.4
 CLOUD_WIDTH, CLOUD_HEIGHT = 50, 25
-DINO_WIDTH, DINO_HEIGHT = 70, 80
 
 # Colors
 WHITE = (255, 255, 255)
@@ -23,8 +20,6 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 720, 400
 
 # Setup
 WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-DINO_X_POS = 30
-DINO_Y_POS = SCREEN_HEIGHT//2 - DINO_HEIGHT + 15
 
 pygame.display.set_caption("Gino")
 
@@ -34,27 +29,12 @@ HORIZON = pygame.transform.scale(pygame.image.load(os.path.join(
 CLOUD = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Cloud.png')), (CLOUD_WIDTH, CLOUD_HEIGHT)).convert_alpha()
 
-DINO_STANDING = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Standing.png')), (DINO_WIDTH, DINO_HEIGHT)).convert_alpha()
-
-DINO_LEFT = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Left_Run.png')), (DINO_WIDTH, DINO_HEIGHT)).convert_alpha()
-
-DINO_RIGHT = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Right_Run.png')), (DINO_WIDTH, DINO_HEIGHT)).convert_alpha()
-
-
 # Events
 GENERATE_MORE_CLOUDS = pygame.USEREVENT + 1
-SWITCH_FOOT = pygame.USEREVENT + 2
-
-# Timer
-pygame.time.set_timer(SWITCH_FOOT, 250)
 
 horizon_width = HORIZON.get_width()
 horizon_scroll_x = 0
 cloud_scroll_x = 0
-left_foot = True
 
 
 def draw_window(clouds, play=True):
@@ -76,40 +56,21 @@ def draw_window(clouds, play=True):
         WINDOW.blit(HORIZON, (i * horizon_width +
                     horizon_scroll_x, SCREEN_HEIGHT//2))
 
-    # Normal game play if ON, static image if OFF
+    # Animate screen if play mode is ON
     if play:
-        make_dino_move()
+        horizon_scroll_x -= 0.8
+        cloud_scroll_x -= 0.4
 
-        horizon_scroll_x -= HORIZON_VEL
-        cloud_scroll_x -= CLOUD_VEL
-
-        if fabs(horizon_scroll_x) > horizon_width:
-            pygame.event.post(pygame.event.Event(GENERATE_MORE_CLOUDS))
-            horizon_scroll_x = 0
-    else:
-        # Dino stands
-        WINDOW.blit(DINO_STANDING, (DINO_X_POS, DINO_Y_POS))
+    if fabs(horizon_scroll_x) > horizon_width:
+        pygame.event.post(pygame.event.Event(GENERATE_MORE_CLOUDS))
+        horizon_scroll_x = 0
 
     pygame.display.update()
-
-
-def make_dino_move():
-    global left_foot
-
-    # Switch between Dino sprites to create illusion of left..right motion.
-    if left_foot:
-        WINDOW.blit(DINO_LEFT, (DINO_X_POS, DINO_Y_POS))
-        # left_foot = False
-    else:
-        WINDOW.blit(DINO_RIGHT, (DINO_X_POS, DINO_Y_POS))
-        # left_foot = True
 
 
 def main():
     """main code for the game.
     """
-    global left_foot
-
     game_running = True
     play = False
     clock = pygame.time.Clock()
@@ -152,10 +113,6 @@ def main():
                     # Add a new set of clouds at the tailend of the initial set
                     clouds.extend([pygame.Rect(cloud_x + i*200, cloud_y,
                                                CLOUD_WIDTH, CLOUD_HEIGHT) for i in range(random.randint(1, 3))])
-
-                # Handling the switch between Dino's right and left foot while moving
-                if event.type == SWITCH_FOOT:
-                    left_foot = not left_foot  # Invert left_foot
 
             draw_window(clouds)  # Draw window for subsequent screen.
 
