@@ -8,13 +8,13 @@ from math import fabs
 
 # Game Entities import
 from dino import Dino
-from environment import Environment
 
 pygame.init()
 
 # Constants
 FPS = 60
 HORIZON_VEL = 1.2
+CLOUD_VEL = 0.5
 CLOUD_WIDTH, CLOUD_HEIGHT = 50, 25
 DINO_WIDTH, DINO_HEIGHT = 70, 80
 OBSTACLE_WIDTH, OBSTACLE_HEIGHT = 50, 70
@@ -36,32 +36,49 @@ OBSTACLE_DISTANCES = (50, 75, 100)
 pygame.display.set_caption("Gino")
 
 # Images
+HORIZON = pygame.transform.scale(pygame.image.load(os.path.join(
+    'Assets', 'sprites', 'Horizon.png')), (SCREEN_WIDTH - 0, 10)).convert_alpha()
+CLOUD = pygame.transform.scale(pygame.image.load(os.path.join(
+    'Assets', 'sprites', 'Cloud.png')), (CLOUD_WIDTH, CLOUD_HEIGHT)).convert_alpha()
 ONE_CACTUS = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', '1_Cactus.png')), (OBSTACLE_WIDTH, OBSTACLE_HEIGHT)).convert_alpha()
 
 
 # Events
-SWITCH_FOOT = pygame.USEREVENT + 1
-ADD_OBSTACLES = pygame.USEREVENT + 2
+GENERATE_MORE_CLOUDS = pygame.USEREVENT + 1
+SWITCH_FOOT = pygame.USEREVENT + 2
+ADD_OBSTACLES = pygame.USEREVENT + 3
 
 # Timers
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
+horizon_width = HORIZON.get_width()
+horizon_scroll_x = 0
+cloud_scroll_x = 0
 obstacle_scroll_x = 0
 left_foot = True
 
 
-def draw_window(dino, environment, obstacles, play=True):
+def draw_window(dino, clouds, obstacles, play=True):
     """Handles repainting of screen surface
     """
+    global horizon_scroll_x
     global obstacle_scroll_x
+    global cloud_scroll_x
     global left_foot
+
+    horizon_tiles = 3
 
     WINDOW.fill(WHITE)
 
-    environment.draw_clouds(WINDOW)
+    # Render parallax clouds
+    for cloud in clouds:
+        WINDOW.blit(CLOUD, (cloud.x + cloud_scroll_x, cloud.y))
 
-    environment.draw_horizon(WINDOW)
+    # Render parallax horizon
+    for i in range(0, horizon_tiles):
+        WINDOW.blit(HORIZON, (i * horizon_width +
+                    horizon_scroll_x, SCREEN_HEIGHT//2 + SCREEN_HEIGHT//8))
 
     # Render obstacles on path
     for obstacle in obstacles:
@@ -74,9 +91,14 @@ def draw_window(dino, environment, obstacles, play=True):
     # Normal game play if ON, static image if OFF
     if play:
         dino.move(left_foot)
-        environment.animate()
 
+        horizon_scroll_x -= HORIZON_VEL
         obstacle_scroll_x -= HORIZON_VEL
+        cloud_scroll_x -= CLOUD_VEL
+
+        if fabs(horizon_scroll_x) > horizon_width:
+            pygame.event.post(pygame.event.Event(GENERATE_MORE_CLOUDS))
+            horizon_scroll_x = 0
 
     else:
         dino.stand()
@@ -94,9 +116,13 @@ def main():
     play = False
     clock = pygame.time.Clock()
 
+    # Create bounding box for Dino
+    # dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
     dino = Dino(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
-    environment = Environment(
-        SCREEN_WIDTH, SCREEN_HEIGHT, CLOUD_WIDTH, CLOUD_HEIGHT)
+
+    # Generate a random number of clouds to move in parallax
+    clouds = [pygame.Rect((i+1) * 200, (i+1) * 15, CLOUD_WIDTH, CLOUD_HEIGHT)
+              for i in range(random.randint(1, 3))]
 
     # Generate random number of obstacles to be placed on the road
     obstacles = [pygame.Rect(SCREEN_WIDTH + 10 + i*50, OBSTACLE_Y_POS, OBSTACLE_WIDTH,
@@ -128,6 +154,18 @@ def main():
                     if event.key == pygame.K_SPACE:
                         print("Jump")
 
+                # Catching and handling generate cloud events
+                if event.type == GENERATE_MORE_CLOUDS:
+                    # New starting points
+                    cloud_x = clouds[-1].x + random.randint(100, 300)
+                    cloud_y = random.randint(15, 45)
+
+                    clouds = clouds[1:]  # Shift out the first cloud
+
+                    # Add a new set of clouds at the tailend of the initial set
+                    clouds.extend([pygame.Rect(cloud_x + i*200, cloud_y,
+                                               CLOUD_WIDTH, CLOUD_HEIGHT) for i in range(random.randint(1, 3))])
+
                 # Handling the switch between Dino's right and left foot while moving
                 if event.type == SWITCH_FOOT:
                     left_foot = not left_foot  # Invert left_foot
@@ -146,9 +184,9 @@ def main():
             #     print("Jump")
 
             # Draw window for subsequent screen.
-            draw_window(dino, environment, obstacles)
+            draw_window(dino, clouds, obstacles)
 
-        draw_window(dino, environment, obstacles, play)  # Draw initial screen.
+        draw_window(dino, clouds, obstacles, play)  # Draw initial screen.
 
     pygame.quit()
 
