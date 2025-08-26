@@ -101,6 +101,8 @@ def draw_window(dino, clouds, obstacles, play=True):
             horizon_scroll_x = 0
 
     else:
+        # Dino stands
+        # WINDOW.blit(DINO_STANDING, (dino.x, dino.y))
         dino.stand()
 
     dino.update(WINDOW)
