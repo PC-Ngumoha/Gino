@@ -37,7 +37,7 @@ horizon_scroll_x = 0
 cloud_scroll_x = 0
 
 
-def draw_window(clouds, play=True):
+def draw_window(clouds):
     """Handles repainting of screen surface
     """
     global horizon_scroll_x
@@ -56,23 +56,18 @@ def draw_window(clouds, play=True):
         WINDOW.blit(HORIZON, (i * horizon_width +
                     horizon_scroll_x, SCREEN_HEIGHT//2))
 
-    # Animate screen if play mode is ON
-    if play:
-        horizon_scroll_x -= 0.8
-        cloud_scroll_x -= 0.4
+    horizon_scroll_x -= 0.8
+    cloud_scroll_x -= 0.4
 
     if fabs(horizon_scroll_x) > horizon_width:
         pygame.event.post(pygame.event.Event(GENERATE_MORE_CLOUDS))
         horizon_scroll_x = 0
-
-    pygame.display.update()
 
 
 def main():
     """main code for the game.
     """
     game_running = True
-    play = False
     clock = pygame.time.Clock()
 
     # Generate a random number of clouds to move in parallax
@@ -80,43 +75,26 @@ def main():
               for i in range(random.randint(1, 3))]
 
     while game_running:
+        clock.tick(FPS)
         # Poll for events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_running = False
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    play = True
+            # Catching and handling generate cloud events
+            if event.type == GENERATE_MORE_CLOUDS:
+                # New starting points
+                cloud_x = clouds[-1].x + random.randint(100, 300)
+                cloud_y = random.randint(15, 45)
 
-        while play:
-            clock.tick(FPS)
-            # Poll for events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    game_running, play = False, False
+                clouds = clouds[1:]  # Shift out the first cloud
 
-                # Testing the pause functionality
-                # FIXME: Remove me when game is complete.
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        play = False
+                # Add a new set of clouds at the tailend of the initial set
+                clouds.extend([pygame.Rect(cloud_x + i*200, cloud_y,
+                              CLOUD_WIDTH, CLOUD_HEIGHT) for i in range(random.randint(1, 3))])
 
-                # Catching and handling generate cloud events
-                if event.type == GENERATE_MORE_CLOUDS:
-                    # New starting points
-                    cloud_x = clouds[-1].x + random.randint(100, 300)
-                    cloud_y = random.randint(15, 45)
-
-                    clouds = clouds[1:]  # Shift out the first cloud
-
-                    # Add a new set of clouds at the tailend of the initial set
-                    clouds.extend([pygame.Rect(cloud_x + i*200, cloud_y,
-                                               CLOUD_WIDTH, CLOUD_HEIGHT) for i in range(random.randint(1, 3))])
-
-            draw_window(clouds)  # Draw window for subsequent screen.
-
-        draw_window(clouds, play)  # Draw initial screen.
+        draw_window(clouds)
+        pygame.display.update()
 
     pygame.quit()
 
