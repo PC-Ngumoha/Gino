@@ -2,6 +2,9 @@
 main.py: Gino game.
 """
 import pygame
+import os
+import random
+from math import fabs
 
 # Game Entities import
 from dino import Dino
@@ -36,43 +39,46 @@ SWITCH_FOOT = pygame.USEREVENT + 1
 # Timers
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
+left_foot = True
+
 
 def draw_window(dino, environment, play=True):
     """Handles repainting of screen surface
     """
+    # global obstacle_scroll_x
+    global left_foot
+
     WINDOW.fill(WHITE)
 
-    environment.draw_clouds(screen=WINDOW)
+    environment.draw_clouds(WINDOW)
 
-    environment.draw_horizon(screen=WINDOW)
+    environment.draw_horizon(WINDOW)
 
-    environment.draw_obstacles(screen=WINDOW)
+    environment.draw_obstacles(WINDOW)
 
     # Normal game play if ON, static image if OFF
     if play:
-        dino.move()
+        dino.move(left_foot)
         environment.animate()
     else:
         dino.stand()
 
-    dino.update(screen=WINDOW)
+    dino.update(WINDOW)
     pygame.display.update()
 
 
 def main():
     """main code for the game.
     """
+    global left_foot
 
     game_running = True
     play = False
     clock = pygame.time.Clock()
 
-    dino = Dino(x=DINO_X_POS, y=DINO_Y_POS,
-                width=DINO_WIDTH, height=DINO_HEIGHT)
+    dino = Dino(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
     environment = Environment(
-        screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT,
-        c_width=CLOUD_WIDTH, c_height=CLOUD_HEIGHT,
-        o_width=OBSTACLE_WIDTH, o_height=OBSTACLE_HEIGHT)
+        SCREEN_WIDTH, SCREEN_HEIGHT, CLOUD_WIDTH, CLOUD_HEIGHT, OBSTACLE_WIDTH, OBSTACLE_HEIGHT)
 
     while game_running:
         # Poll for events
@@ -102,7 +108,7 @@ def main():
 
                 # Handling the switch between Dino's right and left foot while moving
                 if event.type == SWITCH_FOOT:
-                    dino.switch_foot()  # Invert left_foot
+                    left_foot = not left_foot  # Invert left_foot
 
             # Draw window for subsequent screen.
             draw_window(dino, environment)
