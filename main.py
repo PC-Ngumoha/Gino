@@ -15,7 +15,6 @@ CLOUD_VEL = 0.5
 CLOUD_WIDTH, CLOUD_HEIGHT = 50, 25
 DINO_WIDTH, DINO_HEIGHT = 70, 80
 OBSTACLE_WIDTH, OBSTACLE_HEIGHT = 50, 70
-MAX_HEIGHT = 150
 
 # Colors
 WHITE = (255, 255, 255)
@@ -67,7 +66,7 @@ obstacle_scroll_x = 0
 left_foot = True
 
 
-def draw_window(dino, clouds, obstacles, play=True):
+def draw_window(clouds, obstacles, play=True):
     """Handles repainting of screen surface
     """
     global horizon_scroll_x
@@ -97,7 +96,7 @@ def draw_window(dino, clouds, obstacles, play=True):
 
     # Normal game play if ON, static image if OFF
     if play:
-        make_dino_move(dino)
+        make_dino_move()
 
         horizon_scroll_x -= HORIZON_VEL
         obstacle_scroll_x -= HORIZON_VEL
@@ -109,20 +108,20 @@ def draw_window(dino, clouds, obstacles, play=True):
 
     else:
         # Dino stands
-        WINDOW.blit(DINO_STANDING, (dino.x, dino.y))
+        WINDOW.blit(DINO_STANDING, (DINO_X_POS, DINO_Y_POS))
 
     pygame.display.update()
 
 
-def make_dino_move(dino):
+def make_dino_move():
     global left_foot
 
     # Switch between Dino sprites to create illusion of left..right motion.
     if left_foot:
-        WINDOW.blit(DINO_LEFT, (dino.x, dino.y))
+        WINDOW.blit(DINO_LEFT, (DINO_X_POS, DINO_Y_POS))
         # left_foot = False
     else:
-        WINDOW.blit(DINO_RIGHT, (dino.x, dino.y))
+        WINDOW.blit(DINO_RIGHT, (DINO_X_POS, DINO_Y_POS))
         # left_foot = True
 
 
@@ -134,9 +133,6 @@ def main():
     game_running = True
     play = False
     clock = pygame.time.Clock()
-
-    # Create bounding box for Dino
-    dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
 
     # Generate a random number of clouds to move in parallax
     clouds = [pygame.Rect((i+1) * 200, (i+1) * 15, CLOUD_WIDTH, CLOUD_HEIGHT)
@@ -169,9 +165,6 @@ def main():
                     if event.key == pygame.K_RETURN:
                         play = False
 
-                    if event.key == pygame.K_SPACE:
-                        print("Jump")
-
                 # Catching and handling generate cloud events
                 if event.type == GENERATE_MORE_CLOUDS:
                     # New starting points
@@ -197,14 +190,10 @@ def main():
                     obstacles.extend([pygame.Rect(obstacle_x + i*50, OBSTACLE_Y_POS,
                                      OBSTACLE_WIDTH, OBSTACLE_HEIGHT) for i in range(random.randint(1, 3))])
 
-            # keys = pygame.key.get_pressed()
-            # if keys[pygame.K_SPACE]:
-            #     print("Jump")
-
             # Draw window for subsequent screen.
-            draw_window(dino, clouds, obstacles)
+            draw_window(clouds, obstacles)
 
-        draw_window(dino, clouds, obstacles, play)  # Draw initial screen.
+        draw_window(clouds, obstacles, play)  # Draw initial screen.
 
     pygame.quit()
 
