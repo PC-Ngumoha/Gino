@@ -44,7 +44,7 @@ def draw_window():
 def main():
     """main code for the game.
     """
-    global offset_x
+    # global offset_x
 
     game_running = True
 
@@ -56,6 +56,7 @@ def main():
                 game_running = False
 
         draw_window()
+
         pygame.display.update()
 
     pygame.quit()
