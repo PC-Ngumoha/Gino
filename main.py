@@ -98,8 +98,17 @@ def main():
                     left_foot = not left_foot
 
                 # FIXME: experimental feature: testing pause functionality
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                    play = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        play = False
+
+                    # if event.key == pygame.K_SPACE:
+                    #     print("jump")
+
+            keys = pygame.key.get_pressed()
+
+            if keys[pygame.K_SPACE]:
+                print('Jump')
 
             draw_window(play)
 
