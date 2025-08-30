@@ -28,6 +28,8 @@ DINO_LEFT = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Dino_Left_Run.png')), (DINO_WIDTH, DINO_HEIGHT))
 DINO_RIGHT = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Dino_Right_Run.png')), (DINO_WIDTH, DINO_HEIGHT))
+
+DINO_X_POS = 30
 DINO_Y_POS = HORIZON_Y_POS - DINO_HEIGHT + DINO_HEIGHT//4
 
 # User Events
@@ -42,7 +44,7 @@ left_foot = True
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
-def draw_window(play):
+def draw_window(play, dino):
     global offset_x
     global left_foot
 
@@ -56,15 +58,15 @@ def draw_window(play):
 
     if play:
         if left_foot:
-            WINDOW.blit(DINO_LEFT, (30, DINO_Y_POS))
+            WINDOW.blit(DINO_LEFT, (dino.x, dino.y))
         else:
-            WINDOW.blit(DINO_RIGHT, (30, DINO_Y_POS))
+            WINDOW.blit(DINO_RIGHT, (dino.x, dino.y))
 
         offset_x -= HORIZON_VEL
         if abs(offset_x) > SCREEN_WIDTH + 100:
             offset_x = 0
     else:
-        WINDOW.blit(DINO_STANDING, (30, DINO_Y_POS))
+        WINDOW.blit(DINO_STANDING, (dino.x, dino.y))
 
     pygame.display.update()
 
@@ -76,6 +78,9 @@ def main():
 
     game_running = True
     play = False
+
+    # Help us manage Dino's position dynamically
+    dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
 
     while game_running:
 
@@ -108,11 +113,13 @@ def main():
             keys = pygame.key.get_pressed()
 
             if keys[pygame.K_SPACE]:
-                print('Jump')
+                dino.y -= 10  # go up little by little
+                draw_window(play, dino=dino)
+                pygame.display.update()
 
-            draw_window(play)
+            draw_window(play, dino=dino)
 
-        draw_window(play)
+        draw_window(play, dino=dino)
 
     pygame.quit()
 
