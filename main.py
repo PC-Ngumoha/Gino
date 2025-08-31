@@ -40,6 +40,7 @@ SWITCH_FOOT = pygame.USEREVENT + 1
 offset_x = 0
 offset_y = 0
 left_foot = True
+dino_falling = False
 
 # Timer to switch foot
 pygame.time.set_timer(SWITCH_FOOT, 125)
@@ -75,7 +76,7 @@ def draw_window(play, dino):
 def main():
     """main code for the game.
     """
-    global offset_y
+    global offset_y, dino_falling
     global left_foot
 
     game_running = True
@@ -114,14 +115,25 @@ def main():
 
             keys = pygame.key.get_pressed()
 
-            if keys[pygame.K_SPACE]:
+            if keys[pygame.K_SPACE] and not dino_falling:
                 # dino.y -= 10  # go up little by little
                 # draw_window(play, dino=dino)
                 # pygame.display.update()
-                offset_y += 4
 
-            if (dino.y - offset_y) < DINO_Y_POS:
-                offset_y -= 1
+                # If we're not yet at max height, keep going up
+                if (dino.y - offset_y) > 30:
+                    offset_y += 10
+                else:
+                    # Stop going up and wait for 20 milliseconds
+                    pygame.time.wait(100)
+                    dino_falling = True
+
+            if (dino.y - offset_y) < DINO_Y_POS or dino_falling:
+                offset_y -= 3
+
+                # Stop dino_falling if we're already on the ground
+                if (dino.y - offset_y) >= DINO_Y_POS and dino_falling:
+                    dino_falling = False
 
             draw_window(play, dino=dino)
 
