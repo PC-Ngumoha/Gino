@@ -38,6 +38,7 @@ SWITCH_FOOT = pygame.USEREVENT + 1
 
 # Global variables
 offset_x = 0
+offset_y = 0
 left_foot = True
 
 # Timer to switch foot
@@ -45,7 +46,7 @@ pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
 def draw_window(play, dino):
-    global offset_x
+    global offset_x, offset_y
     global left_foot
 
     horizon_tiles = 2
@@ -58,15 +59,15 @@ def draw_window(play, dino):
 
     if play:
         if left_foot:
-            WINDOW.blit(DINO_LEFT, (dino.x, dino.y))
+            WINDOW.blit(DINO_LEFT, (dino.x, dino.y - offset_y))
         else:
-            WINDOW.blit(DINO_RIGHT, (dino.x, dino.y))
+            WINDOW.blit(DINO_RIGHT, (dino.x, dino.y - offset_y))
 
         offset_x -= HORIZON_VEL
         if abs(offset_x) > SCREEN_WIDTH + 100:
             offset_x = 0
     else:
-        WINDOW.blit(DINO_STANDING, (dino.x, dino.y))
+        WINDOW.blit(DINO_STANDING, (dino.x, dino.y - offset_y))
 
     pygame.display.update()
 
@@ -74,6 +75,7 @@ def draw_window(play, dino):
 def main():
     """main code for the game.
     """
+    global offset_y
     global left_foot
 
     game_running = True
@@ -113,9 +115,13 @@ def main():
             keys = pygame.key.get_pressed()
 
             if keys[pygame.K_SPACE]:
-                dino.y -= 10  # go up little by little
-                draw_window(play, dino=dino)
-                pygame.display.update()
+                # dino.y -= 10  # go up little by little
+                # draw_window(play, dino=dino)
+                # pygame.display.update()
+                offset_y += 4
+
+            if (dino.y - offset_y) < DINO_Y_POS:
+                offset_y -= 1
 
             draw_window(play, dino=dino)
 
