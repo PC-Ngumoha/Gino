@@ -6,3 +6,5 @@ A replica of the Google Chrome Dino game made with Python's Pygame module. This 
 - [Part 2: Infinite Horizons](https://github.com/PC-Ngumoha/Gino/tree/part-2)
 
 - [Part 3: Running Dino](https://github.com/PC-Ngumoha/Gino/tree/part-3)
+
+- [Part 4: Jumping Dino](https://github.com/PC-Ngumoha/Gino/tree/part-4)
