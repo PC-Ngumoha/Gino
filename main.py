@@ -41,13 +41,14 @@ offset_x = 0
 offset_y = 0
 left_foot = True
 dino_falling = False
+dino_jumping = False
 
 # Timer to switch foot
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
 def draw_window(play, dino):
-    global offset_x, offset_y
+    global offset_x, offset_y, dino_jumping
     global left_foot
 
     horizon_tiles = 2
@@ -59,10 +60,15 @@ def draw_window(play, dino):
         WINDOW.blit(HORIZON, (horizon_width * i + offset_x, HORIZON_Y_POS))
 
     if play:
-        if left_foot:
-            WINDOW.blit(DINO_LEFT, (dino.x, dino.y - offset_y))
+        if dino_jumping:
+            # Don't move legs
+            WINDOW.blit(DINO_STANDING, (dino.x, dino.y - offset_y))
         else:
-            WINDOW.blit(DINO_RIGHT, (dino.x, dino.y - offset_y))
+            # Move legs
+            if left_foot:
+                WINDOW.blit(DINO_LEFT, (dino.x, dino.y - offset_y))
+            else:
+                WINDOW.blit(DINO_RIGHT, (dino.x, dino.y - offset_y))
 
         offset_x -= HORIZON_VEL
         if abs(offset_x) > SCREEN_WIDTH + 100:
@@ -76,7 +82,7 @@ def draw_window(play, dino):
 def main():
     """main code for the game.
     """
-    global offset_y, dino_falling
+    global offset_y, dino_falling, dino_jumping
     global left_foot
 
     game_running = True
@@ -95,6 +101,7 @@ def main():
             # Start playing game when SPACE pressed
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 play = True
+                # pygame.event.clear(pygame.KEYDOWN)  # Clear out key events so that the
 
         while play:
             clock.tick(FPS)
@@ -120,20 +127,23 @@ def main():
                 # draw_window(play, dino=dino)
                 # pygame.display.update()
 
+                dino_jumping = True  # Indicate that Dino is actually jumping
+
                 # If we're not yet at max height, keep going up
-                if (dino.y - offset_y) > 30:
-                    offset_y += 10
+                if (dino.y - offset_y) > 20:
+                    offset_y += 25
                 else:
                     # Stop going up and wait for 20 milliseconds
-                    pygame.time.wait(100)
+                    pygame.time.wait(20)
                     dino_falling = True
 
-            if (dino.y - offset_y) < DINO_Y_POS or dino_falling:
-                offset_y -= 3
+            if (dino.y - offset_y) < DINO_Y_POS:
+                offset_y -= 5
 
                 # Stop dino_falling if we're already on the ground
-                if (dino.y - offset_y) >= DINO_Y_POS and dino_falling:
+                if (dino.y - offset_y) >= DINO_Y_POS:
                     dino_falling = False
+                    dino_jumping = False  # Dino is no longer jumping
 
             draw_window(play, dino=dino)
 
