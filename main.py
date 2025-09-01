@@ -8,9 +8,11 @@ pygame.init()
 
 # Constants
 FPS = 60
-HORIZON_VEL = 0.8
+HORIZON_VEL = 3.0
 SCREEN_WIDTH, SCREEN_HEIGHT = 720, 400
 DINO_WIDTH, DINO_HEIGHT = 80, 80
+JUMP_PACE, FALL_PACE = 25, 5
+MAX_JUMP_HEIGHT = 10
 WHITE = (255, 255, 255)
 
 WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -20,7 +22,7 @@ pygame.display.set_caption("Gino")
 
 # Fetch the images
 HORIZON = pygame.image.load(os.path.join('Assets', 'sprites', 'Horizon.png'))
-HORIZON_Y_POS = SCREEN_HEIGHT//2 + SCREEN_HEIGHT//6
+HORIZON_Y_POS = SCREEN_HEIGHT//2 + SCREEN_HEIGHT//4
 
 DINO_STANDING = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Dino_Standing.png')), (DINO_WIDTH, DINO_HEIGHT))
@@ -101,7 +103,6 @@ def main():
             # Start playing game when SPACE pressed
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 play = True
-                # pygame.event.clear(pygame.KEYDOWN)  # Clear out key events so that the
 
         while play:
             clock.tick(FPS)
@@ -130,15 +131,15 @@ def main():
                 dino_jumping = True  # Indicate that Dino is actually jumping
 
                 # If we're not yet at max height, keep going up
-                if (dino.y - offset_y) > 20:
-                    offset_y += 25
+                if (dino.y - offset_y) > MAX_JUMP_HEIGHT:
+                    offset_y += JUMP_PACE
                 else:
                     # Stop going up and wait for 20 milliseconds
-                    pygame.time.wait(20)
+                    pygame.time.delay(20)
                     dino_falling = True
 
             if (dino.y - offset_y) < DINO_Y_POS:
-                offset_y -= 5
+                offset_y -= FALL_PACE
 
                 # Stop dino_falling if we're already on the ground
                 if (dino.y - offset_y) >= DINO_Y_POS:
