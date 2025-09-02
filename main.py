@@ -3,6 +3,7 @@ main.py: Gino game.
 """
 import pygame
 import os
+import random
 
 pygame.init()
 
@@ -31,6 +32,9 @@ DINO_LEFT = pygame.transform.scale(pygame.image.load(os.path.join(
 DINO_RIGHT = pygame.transform.scale(pygame.image.load(os.path.join(
     'Assets', 'sprites', 'Dino_Right_Run.png')), (DINO_WIDTH, DINO_HEIGHT))
 
+CACTUS = pygame.image.load(os.path.join(
+    'Assets', 'sprites', '1_Cactus.png')).convert_alpha()
+
 DINO_X_POS = 30
 DINO_Y_POS = HORIZON_Y_POS - DINO_HEIGHT + DINO_HEIGHT//4
 
@@ -49,7 +53,7 @@ dino_jumping = False
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
-def draw_window(play, dino):
+def draw_window(play, dino, obstacles):
     global offset_x, offset_y, dino_jumping
     global left_foot
 
@@ -60,6 +64,12 @@ def draw_window(play, dino):
 
     for i in range(horizon_tiles):
         WINDOW.blit(HORIZON, (horizon_width * i + offset_x, HORIZON_Y_POS))
+
+    # Displaying the obstacles
+    for obstacle in obstacles:
+        cactus_image = pygame.transform.scale(
+            CACTUS, (obstacle.width, obstacle.height)).convert_alpha()
+        WINDOW.blit(cactus_image, (obstacle.x, obstacle.y))
 
     if play:
         if dino_jumping:
@@ -92,6 +102,18 @@ def main():
 
     # Help us manage Dino's position dynamically
     dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
+
+    # Generate a random number of cacti as initial obstacles
+    cacti = []
+
+    num_cactus = random.randint(1, 3)
+    cactus_height = random.randint(50, 80)
+    for i in range(num_cactus):
+        cactus_y_pos = HORIZON_Y_POS - cactus_height + cactus_height//4
+        cactus_x_pos = SCREEN_WIDTH - 100 + i*40
+
+        cacti.append(pygame.Rect(
+            cactus_x_pos, cactus_y_pos, 40, cactus_height))
 
     while game_running:
 
@@ -146,9 +168,9 @@ def main():
                     dino_falling = False
                     dino_jumping = False  # Dino is no longer jumping
 
-            draw_window(play, dino=dino)
+            draw_window(play, dino=dino, obstacles=cacti)
 
-        draw_window(play, dino=dino)
+        draw_window(play, dino=dino, obstacles=cacti)
 
     pygame.quit()
 
