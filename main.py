@@ -7,6 +7,12 @@ import random
 
 pygame.init()
 
+# TODO: Refactor Dino into seperate class
+
+# TODO: Refactor Environment into seperate class
+
+# TODO: Clean up code base
+
 # Constants
 FPS = 60
 HORIZON_VEL = 4.2
