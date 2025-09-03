@@ -7,10 +7,9 @@ import random
 
 pygame.init()
 
-# TODO: Refactor Dino into seperate class
-
 
 class Dino:
+    """Dino class"""
 
     def __init__(self, screen_height):
         self.width = 80
@@ -78,14 +77,80 @@ class Dino:
 
 
 # TODO: Refactor Environment into seperate class
+class Environment:
+    """Wrapper class for the game environment"""
+
+    def __init__(self, screen_width, screen_height):
+        self.screen_width = screen_width
+
+        self.horizon_vel = 4.2
+        self.horizon_tiles = 2
+        self.horizon_offset_x = 0
+
+        self.horizon_sprite = pygame.image.load(
+            os.path.join('Assets', 'sprites', 'Horizon.png'))
+        self.horizon_y = screen_height//2 + screen_height//4
+        self.horizon_width = self.horizon_sprite.get_width()
+
+        self.cactus_width = 30
+        self.cactus_offset_x = 0
+        self.cacti = []
+
+        self.cactus_sprite = pygame.image.load(os.path.join(
+            'Assets', 'sprites', '1_Cactus.png'))
+
+        self._generate_cacti()
+
+    def draw_horizon(self, screen):
+        """draw horizon"""
+        for i in range(self.horizon_tiles):
+            WINDOW.blit(self.horizon_sprite, (self.horizon_width * i +
+                        self.horizon_offset_x, self.horizon_y))
+
+    def draw_cacti(self, screen):
+        """draw cacti"""
+        # Displaying the obstacles
+        for cactus in self.cacti:
+            cactus_image = pygame.transform.scale(
+                self.cactus_sprite, (cactus.width, cactus.height)).convert_alpha()
+            screen.blit(cactus_image, (cactus.x +
+                        self.cactus_offset_x, cactus.y))
+
+        # Determine: If right-most cactus in set is completely off the left edge
+        if (self.cacti[-1].x + self.cactus_offset_x) < 0:
+            # Generate a new set of obstacles:
+            self._generate_cacti()
+
+    def update(self):
+        """animate environment elements"""
+        self.horizon_offset_x -= self.horizon_vel
+        self.cactus_offset_x -= self.horizon_vel
+
+        if abs(self.horizon_offset_x) > self.screen_width + 100:
+            self.horizon_offset_x = 0
+
+    def _generate_cacti(self):
+        """Utility function: generate new set of obstacles"""
+        starting_point = 0
+        if len(self.cacti) > 0:
+            starting_point = self.cacti[-1].x
+            self.cacti.clear()
+
+        num_cactus = random.randint(1, 3)
+        cactus_height = random.randint(50, 80)
+        for i in range(num_cactus):
+            cactus_y = self.horizon_y - cactus_height + cactus_height//4
+            cactus_x = starting_point + self.screen_width + i*self.cactus_width
+
+            self.cacti.append(pygame.Rect(
+                cactus_x, cactus_y, self.cactus_width, cactus_height))
+
 
 # TODO: Clean up code base
 
 # Constants
 FPS = 60
-HORIZON_VEL = 4.2
 SCREEN_WIDTH, SCREEN_HEIGHT = 720, 400
-CACTUS_WIDTH = 30
 WHITE = (255, 255, 255)
 
 WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -93,16 +158,8 @@ clock = pygame.time.Clock()
 
 pygame.display.set_caption("Gino")
 
-# Fetch the images
-HORIZON = pygame.image.load(os.path.join('Assets', 'sprites', 'Horizon.png'))
-HORIZON_Y_POS = SCREEN_HEIGHT//2 + SCREEN_HEIGHT//4
-
-CACTUS = pygame.image.load(os.path.join(
-    'Assets', 'sprites', '1_Cactus.png')).convert_alpha()
-
 # User Events
 SWITCH_FOOT = pygame.USEREVENT + 1
-GENERATE_OBSTACLES = pygame.USEREVENT + 2
 
 
 # Global variables
@@ -113,57 +170,21 @@ obstacle_offset_x = 0
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
-def draw_window(play, dino, obstacles):
-    global offset_x, obstacle_offset_x
-
-    horizon_tiles = 2
-    horizon_width = HORIZON.get_width()
+def draw_window(play: bool, dino: Dino, environment: Environment) -> None:
 
     WINDOW.fill(WHITE)  # White
 
-    for i in range(horizon_tiles):
-        WINDOW.blit(HORIZON, (horizon_width * i + offset_x, HORIZON_Y_POS))
-
-    # Displaying the obstacles
-    for obstacle in obstacles:
-        cactus_image = pygame.transform.scale(
-            CACTUS, (obstacle.width, obstacle.height)).convert_alpha()
-        WINDOW.blit(cactus_image, (obstacle.x + obstacle_offset_x, obstacle.y))
-
-    # Determine: If left-most obstacle is completely off the left edge
-    if (obstacles[-1].x + obstacle_offset_x) < 0:
-        # Generate a new set of obstacles:
-        pygame.event.post(pygame.event.Event(GENERATE_OBSTACLES))
+    environment.draw_horizon(screen=WINDOW)
+    environment.draw_cacti(screen=WINDOW)
 
     if play:
 
         dino.update(screen=WINDOW)
-
-        offset_x -= HORIZON_VEL
-        obstacle_offset_x -= HORIZON_VEL
-
-        if abs(offset_x) > SCREEN_WIDTH + 100:
-            offset_x = 0
+        environment.update()
     else:
         dino.draw(screen=WINDOW)
 
     pygame.display.update()
-
-
-def generate_cacti(starting_point=0):
-
-    cacti = []
-
-    num_cactus = random.randint(1, 3)
-    cactus_height = random.randint(50, 80)
-    for i in range(num_cactus):
-        cactus_y_pos = HORIZON_Y_POS - cactus_height + cactus_height//4
-        cactus_x_pos = starting_point + SCREEN_WIDTH + i*CACTUS_WIDTH
-
-        cacti.append(pygame.Rect(
-            cactus_x_pos, cactus_y_pos, CACTUS_WIDTH, cactus_height))
-
-    return cacti
 
 
 def main():
@@ -174,8 +195,8 @@ def main():
 
     dino = Dino(screen_height=SCREEN_HEIGHT)
 
-    # Generate a random number of cacti as initial obstacles
-    cacti = generate_cacti()
+    environment = Environment(
+        screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
 
     while game_running:
 
@@ -203,16 +224,9 @@ def main():
                     if event.key == pygame.K_RETURN:
                         play = False
 
-                if event.type == GENERATE_OBSTACLES:
-                    last_obstacle_x = cacti[-1].x
+            draw_window(play, dino=dino, environment=environment)
 
-                    cacti.clear()  # Remove all obstacles in initial set
-
-                    cacti = generate_cacti(starting_point=last_obstacle_x)
-
-            draw_window(play, dino=dino, obstacles=cacti)
-
-        draw_window(play, dino=dino, obstacles=cacti)
+        draw_window(play, dino=dino, environment=environment)
 
     pygame.quit()
 
