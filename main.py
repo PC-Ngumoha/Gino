@@ -7,194 +7,243 @@ import random
 
 pygame.init()
 
+
+class Dino:
+    """Dino class"""
+
+    def __init__(self, screen_height: int):
+        self.width = 80
+        self.height = 80
+        self.jump_pace = 25
+        self.fall_pace = 5
+        self.jumping = False
+        self.falling = False
+        self.left_foot = True
+        self.offset_y = 0
+        self.max_height = 10
+
+        self.x = 30
+        self.y = screen_height//2 + screen_height//4 - self.height + self.height//4
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+        self.standing_sprite = pygame.transform.scale(pygame.image.load(os.path.join(
+            'Assets', 'sprites', 'Dino_Standing.png')), (self.width, self.height))
+        self.left_foot_sprite = pygame.transform.scale(pygame.image.load(os.path.join(
+            'Assets', 'sprites', 'Dino_Left_Run.png')), (self.width, self.height))
+        self.right_foot_sprite = pygame.transform.scale(pygame.image.load(os.path.join(
+            'Assets', 'sprites', 'Dino_Right_Run.png')), (self.width, self.height))
+
+    def update(self, screen: pygame.Surface) -> None:
+        """Handles animating Dino on screen"""
+        keys = pygame.key.get_pressed()
+
+        # init jumping when SPACE pressed
+        if keys[pygame.K_SPACE] and not self.falling:
+
+            self.jumping = True
+
+            if (self.y - self.offset_y) > self.max_height:
+                self.offset_y += self.jump_pace
+            else:
+                self.falling = True
+
+        # Determine if above ground level
+        if (self.y - self.offset_y) < self.y:
+            self.offset_y -= self.fall_pace
+
+            # At ground level
+            if (self.y - self.offset_y) >= self.y:
+                self.jumping = False
+                self.falling = False
+
+        if self.jumping:
+            # Don't move legs
+            screen.blit(self.standing_sprite, (self.x, self.y - self.offset_y))
+        else:
+            # Move legs
+            if self.left_foot:
+                screen.blit(self.left_foot_sprite,
+                            (self.x, self.y - self.offset_y))
+            else:
+                screen.blit(self.right_foot_sprite,
+                            (self.x, self.y - self.offset_y))
+
+        self._update_rect()  # Update position of bounding box
+
+    def _update_rect(self) -> None:
+        """Update the position of the bounding box"""
+        self.rect.x = self.x
+        self.rect.y = self.y - self.offset_y
+
+    def draw(self, screen: pygame.Surface) -> None:
+        """Draws Dino before game play starts."""
+        screen.blit(self.standing_sprite, (self.x, self.y - self.offset_y))
+
+    def switch_foot(self):
+        """Trigger a change in sprite between left_foot and right foot"""
+        self.left_foot = not self.left_foot
+
+
+# TODO: Refactor Environment into seperate class
+class Environment:
+    """Wrapper class for the game environment"""
+
+    def __init__(self, screen_width: int, screen_height: int):
+        self.screen_width = screen_width
+
+        self.horizon_vel = 4.5
+        self.horizon_tiles = 2
+        self.horizon_offset_x = 0
+
+        self.horizon_sprite = pygame.image.load(
+            os.path.join('Assets', 'sprites', 'Horizon.png'))
+        self.horizon_y = screen_height//2 + screen_height//4
+        self.horizon_width = self.horizon_sprite.get_width()
+
+        self.cactus_width = 30
+        self.cactus_offset_x = 0
+        self.cacti = []
+
+        self.cactus_sprite = pygame.image.load(os.path.join(
+            'Assets', 'sprites', '1_Cactus.png'))
+
+        self._generate_cacti()
+
+    def draw_horizon(self, screen: pygame.Surface) -> None:
+        """draw horizon"""
+        for i in range(self.horizon_tiles):
+            screen.blit(self.horizon_sprite, (self.horizon_width * i +
+                        self.horizon_offset_x, self.horizon_y))
+
+    def draw_cacti(self, screen: pygame.Surface) -> None:
+        """draw cacti"""
+        # Displaying the obstacles
+        for cactus in self.cacti:
+            cactus_image = pygame.transform.scale(
+                self.cactus_sprite, (cactus.width, cactus.height)).convert_alpha()
+            screen.blit(cactus_image, (cactus.x +
+                        self.cactus_offset_x, cactus.y))
+
+        # Determine: If right-most cactus in set is completely off the left edge
+        if (self.cacti[-1].x + self.cactus_offset_x) < 0:
+            # Generate a new set of obstacles:
+            self._generate_cacti()
+
+    def detect_collision(self, dino_rect: pygame.Rect) -> None:
+        """Detect collision with dino"""
+        for cactus in self.cacti:
+            # Temporarily shift cactus rect
+            moved_rect = cactus.move(self.cactus_offset_x, 0)
+            if dino_rect.colliderect(moved_rect):
+                pygame.event.post(pygame.event.Event(COLLISION_DETECTED))
+
+    def update(self) -> None:
+        """animate environment elements"""
+        self.horizon_offset_x -= self.horizon_vel
+        self.cactus_offset_x -= self.horizon_vel
+
+        if abs(self.horizon_offset_x) > self.screen_width + 100:
+            self.horizon_offset_x = 0
+
+    def _generate_cacti(self) -> None:
+        """Utility function: generate new set of obstacles"""
+        starting_point = 0
+        if len(self.cacti) > 0:
+            starting_point = self.cacti[-1].x
+            self.cacti.clear()
+
+        num_cactus = random.randint(1, 3)
+        cactus_height = random.randint(50, 80)
+        for i in range(num_cactus):
+            cactus_y = self.horizon_y - cactus_height + cactus_height//4
+            cactus_x = starting_point + self.screen_width + \
+                i*(self.cactus_width - 10)
+
+            self.cacti.append(pygame.Rect(
+                cactus_x, cactus_y, self.cactus_width, cactus_height))
+
+
 # Constants
-FPS = 60
-HORIZON_VEL = 4.2
-SCREEN_WIDTH, SCREEN_HEIGHT = 720, 400
-DINO_WIDTH, DINO_HEIGHT = 80, 80
-CACTUS_WIDTH = 30
-JUMP_PACE, FALL_PACE = 25, 6
-MAX_JUMP_HEIGHT = 10
 WHITE = (255, 255, 255)
-
-WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock = pygame.time.Clock()
-
-pygame.display.set_caption("Gino")
-
-# Fetch the images
-HORIZON = pygame.image.load(os.path.join('Assets', 'sprites', 'Horizon.png'))
-HORIZON_Y_POS = SCREEN_HEIGHT//2 + SCREEN_HEIGHT//4
-
-DINO_STANDING = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Standing.png')), (DINO_WIDTH, DINO_HEIGHT))
-DINO_LEFT = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Left_Run.png')), (DINO_WIDTH, DINO_HEIGHT))
-DINO_RIGHT = pygame.transform.scale(pygame.image.load(os.path.join(
-    'Assets', 'sprites', 'Dino_Right_Run.png')), (DINO_WIDTH, DINO_HEIGHT))
-
-CACTUS = pygame.image.load(os.path.join(
-    'Assets', 'sprites', '1_Cactus.png')).convert_alpha()
-
-DINO_X_POS = 30
-DINO_Y_POS = HORIZON_Y_POS - DINO_HEIGHT + DINO_HEIGHT//4
 
 # User Events
 SWITCH_FOOT = pygame.USEREVENT + 1
-GENERATE_OBSTACLES = pygame.USEREVENT + 2
+COLLISION_DETECTED = pygame.USEREVENT + 2
 
-
-# Global variables
-offset_x = 0
-obstacle_offset_x = 0
-offset_y = 0
-left_foot = True
-dino_falling = False
-dino_jumping = False
 
 # Timer to switch foot
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
-def draw_window(play, dino, obstacles):
-    global offset_x, offset_y, dino_jumping, obstacle_offset_x
-    global left_foot
+# TODO: Clean up code base
+class GameController:
 
-    horizon_tiles = 2
-    horizon_width = HORIZON.get_width()
+    def __init__(self):
+        self.screen_width = 720
+        self.screen_height = 400
 
-    WINDOW.fill(WHITE)  # White
+        self.window = pygame.display.set_mode(
+            (self.screen_width, self.screen_height))
+        pygame.display.set_caption("Gino")
 
-    for i in range(horizon_tiles):
-        WINDOW.blit(HORIZON, (horizon_width * i + offset_x, HORIZON_Y_POS))
+        self.running = True
+        self.is_playing = False
+        self.clock = pygame.time.Clock()
 
-    # Displaying the obstacles
-    for obstacle in obstacles:
-        cactus_image = pygame.transform.scale(
-            CACTUS, (obstacle.width, obstacle.height)).convert_alpha()
-        WINDOW.blit(cactus_image, (obstacle.x + obstacle_offset_x, obstacle.y))
+        self.environment = Environment(
+            screen_height=self.screen_height, screen_width=self.screen_width)
+        self.dino = Dino(screen_height=self.screen_height)
 
-    # Determine: If left-most obstacle is completely off the left edge
-    if (obstacles[-1].x + obstacle_offset_x) < 0:
-        # Generate a new set of obstacles:
-        pygame.event.post(pygame.event.Event(GENERATE_OBSTACLES))
+    def draw(self) -> None:
+        self.window.fill(WHITE)
 
-    if play:
-        if dino_jumping:
-            # Don't move legs
-            WINDOW.blit(DINO_STANDING, (dino.x, dino.y - offset_y))
+        self.environment.detect_collision(self.dino.rect)
+        self.environment.draw_horizon(screen=self.window)
+        self.environment.draw_cacti(screen=self.window)
+
+        if self.is_playing:
+            self.dino.update(screen=self.window)
+            self.environment.update()
+
         else:
-            # Move legs
-            if left_foot:
-                WINDOW.blit(DINO_LEFT, (dino.x, dino.y - offset_y))
-            else:
-                WINDOW.blit(DINO_RIGHT, (dino.x, dino.y - offset_y))
+            self.dino.draw(screen=self.window)
 
-        offset_x -= HORIZON_VEL
-        obstacle_offset_x -= HORIZON_VEL
+        pygame.display.update()
 
-        if abs(offset_x) > SCREEN_WIDTH + 100:
-            offset_x = 0
-    else:
-        WINDOW.blit(DINO_STANDING, (dino.x, dino.y - offset_y))
-
-    pygame.display.update()
-
-
-def generate_cacti(starting_point=0):
-
-    cacti = []
-
-    num_cactus = random.randint(1, 3)
-    cactus_height = random.randint(50, 80)
-    for i in range(num_cactus):
-        cactus_y_pos = HORIZON_Y_POS - cactus_height + cactus_height//4
-        cactus_x_pos = starting_point + SCREEN_WIDTH + i*CACTUS_WIDTH
-
-        cacti.append(pygame.Rect(
-            cactus_x_pos, cactus_y_pos, CACTUS_WIDTH, cactus_height))
-
-    return cacti
-
-
-def main():
-    """main code for the game.
-    """
-    global offset_y, dino_falling, dino_jumping
-    global left_foot
-
-    game_running = True
-    play = False
-
-    # Help us manage Dino's position dynamically
-    dino = pygame.Rect(DINO_X_POS, DINO_Y_POS, DINO_WIDTH, DINO_HEIGHT)
-
-    # Generate a random number of cacti as initial obstacles
-    cacti = generate_cacti()
-
-    while game_running:
-
-        # Poll for events
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_running = False
-
-            # Start playing game when SPACE pressed
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                play = True
-
-        while play:
-            clock.tick(FPS)
+    def play(self) -> None:
+        while self.is_playing:
+            self.clock.tick(60)   # 60 fps
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    game_running, play = False, False
+                    self.running, self.is_playing = False, False
 
                 if event.type == SWITCH_FOOT:
-                    left_foot = not left_foot
+                    # left_foot = not left_foot
+                    self.dino.switch_foot()
 
-                # FIXME: experimental feature: testing pause functionality
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        play = False
+                # Fires when collision is detected, The game pauses
+                if event.type == COLLISION_DETECTED:
+                    self.is_playing = False
 
-                if event.type == GENERATE_OBSTACLES:
-                    last_obstacle_x = cacti[-1].x
+            self.draw()
 
-                    cacti.clear()  # Remove all obstacles in initial set
+    def run(self) -> None:
+        while self.running:
+            # Poll for events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
 
-                    cacti = generate_cacti(starting_point=last_obstacle_x)
+                # Start playing game when SPACE pressed
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.is_playing = True
 
-            keys = pygame.key.get_pressed()
+            self.play()
+            self.draw()
 
-            if keys[pygame.K_SPACE] and not dino_falling:
-                # dino.y -= 10  # go up little by little
-                # draw_window(play, dino=dino)
-                # pygame.display.update()
-
-                dino_jumping = True  # Indicate that Dino is actually jumping
-
-                # If we're not yet at max height, keep going up
-                if (dino.y - offset_y) > MAX_JUMP_HEIGHT:
-                    offset_y += JUMP_PACE
-                else:
-                    # Stop going up and wait for 20 milliseconds
-                    # pygame.time.delay(20)
-                    dino_falling = True
-
-            if (dino.y - offset_y) < DINO_Y_POS:
-                offset_y -= FALL_PACE
-
-                # Stop dino_falling if we're already on the ground
-                if (dino.y - offset_y) >= DINO_Y_POS:
-                    dino_falling = False
-                    dino_jumping = False  # Dino is no longer jumping
-
-            draw_window(play, dino=dino, obstacles=cacti)
-
-        draw_window(play, dino=dino, obstacles=cacti)
-
-    pygame.quit()
+        pygame.quit()
 
 
 if __name__ == '__main__':
-    main()
+    game = GameController()
+    game.run()
