@@ -112,7 +112,7 @@ class Environment:
     def draw_horizon(self, screen: pygame.Surface) -> None:
         """draw horizon"""
         for i in range(self.horizon_tiles):
-            WINDOW.blit(self.horizon_sprite, (self.horizon_width * i +
+            screen.blit(self.horizon_sprite, (self.horizon_width * i +
                         self.horizon_offset_x, self.horizon_y))
 
     def draw_cacti(self, screen: pygame.Surface) -> None:
@@ -163,17 +163,8 @@ class Environment:
                 cactus_x, cactus_y, self.cactus_width, cactus_height))
 
 
-# TODO: Clean up code base
-
 # Constants
-FPS = 60
-SCREEN_WIDTH, SCREEN_HEIGHT = 720, 400
 WHITE = (255, 255, 255)
-
-WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock = pygame.time.Clock()
-
-pygame.display.set_caption("Gino")
 
 # User Events
 SWITCH_FOOT = pygame.USEREVENT + 1
@@ -184,67 +175,75 @@ COLLISION_DETECTED = pygame.USEREVENT + 2
 pygame.time.set_timer(SWITCH_FOOT, 125)
 
 
-def draw_window(play: bool, dino: Dino, environment: Environment) -> None:
+# TODO: Clean up code base
+class GameController:
 
-    WINDOW.fill(WHITE)  # White
+    def __init__(self):
+        self.screen_width = 720
+        self.screen_height = 400
 
-    environment.detect_collision(dino.rect)
+        self.window = pygame.display.set_mode(
+            (self.screen_width, self.screen_height))
+        pygame.display.set_caption("Gino")
 
-    environment.draw_horizon(screen=WINDOW)
-    environment.draw_cacti(screen=WINDOW)
+        self.running = True
+        self.is_playing = False
+        self.clock = pygame.time.Clock()
 
-    if play:
+        self.environment = Environment(
+            screen_height=self.screen_height, screen_width=self.screen_width)
+        self.dino = Dino(screen_height=self.screen_height)
 
-        dino.update(screen=WINDOW)
-        environment.update()
-    else:
-        dino.draw(screen=WINDOW)
+    def draw(self) -> None:
+        self.window.fill(WHITE)
 
-    pygame.display.update()
+        self.environment.detect_collision(self.dino.rect)
+        self.environment.draw_horizon(screen=self.window)
+        self.environment.draw_cacti(screen=self.window)
 
+        if self.is_playing:
+            self.dino.update(screen=self.window)
+            self.environment.update()
 
-def main() -> None:
-    """main code for the game.
-    """
-    game_running = True
-    play = False
+        else:
+            self.dino.draw(screen=self.window)
 
-    dino = Dino(screen_height=SCREEN_HEIGHT)
+        pygame.display.update()
 
-    environment = Environment(
-        screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
-
-    while game_running:
-
-        # Poll for events
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_running = False
-
-            # Start playing game when SPACE pressed
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                play = True
-
-        while play:
-            clock.tick(FPS)
+    def play(self) -> None:
+        while self.is_playing:
+            self.clock.tick(60)   # 60 fps
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    game_running, play = False, False
+                    self.running, self.is_playing = False, False
 
                 if event.type == SWITCH_FOOT:
                     # left_foot = not left_foot
-                    dino.switch_foot()
+                    self.dino.switch_foot()
 
                 # Fires when collision is detected, The game pauses
                 if event.type == COLLISION_DETECTED:
-                    play = False
+                    self.is_playing = False
 
-            draw_window(play, dino=dino, environment=environment)
+            self.draw()
 
-        draw_window(play, dino=dino, environment=environment)
+    def run(self) -> None:
+        while self.running:
+            # Poll for events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
 
-    pygame.quit()
+                # Start playing game when SPACE pressed
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.is_playing = True
+
+            self.play()
+            self.draw()
+
+        pygame.quit()
 
 
 if __name__ == '__main__':
-    main()
+    game = GameController()
+    game.run()
