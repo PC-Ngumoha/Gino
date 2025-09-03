@@ -8,3 +8,5 @@ A replica of the Google Chrome Dino game made with Python's Pygame module. This 
 - [Part 3: Running Dino](https://github.com/PC-Ngumoha/Gino/tree/part-3)
 
 - [Part 4: Jumping Dino](https://github.com/PC-Ngumoha/Gino/tree/part-4)
+
+- [Part 5: Deadly Cactus](https://github.com/PC-Ngumoha/Gino/tree/part-5)
