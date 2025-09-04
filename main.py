@@ -8,6 +8,7 @@ import random
 pygame.init()
 
 JUMP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'jump.wav'))
+DIE_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'die.wav'))
 
 
 class Dino:
@@ -304,6 +305,9 @@ class GameController:
 
                 # Fires when collision is detected, The game pauses
                 if event.type == COLLISION_DETECTED:
+                    # Play die sound
+                    pygame.mixer.Sound.play(DIE_SOUND)
+
                     self.is_playing = False
                     self.paused = True
 
