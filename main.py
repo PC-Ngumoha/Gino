@@ -83,9 +83,9 @@ class Dino:
         """Trigger a change in sprite between left_foot and right foot"""
         self.left_foot = not self.left_foot
 
-    def reset(self) -> None:
-        """Reset the Dinosaur's state"""
-        self.offset_y = 0
+    # def reset(self) -> None:
+    #     """Reset the Dinosaur's state"""
+    #     self.offset_y = 0
 
 
 # TODO: Refactor Environment into seperate class
@@ -108,10 +108,19 @@ class Environment:
         self.cactus_offset_x = 0
         self.cacti = []
 
+        self.cloud_width = 55
+        self.cloud_height = 30
+        self.cloud_vel = 0.2
+        self.cloud_offset_x = 0
+        self.clouds = []
+
         self.cactus_sprite = pygame.image.load(os.path.join(
             'Assets', 'sprites', '1_Cactus.png'))
+        self.cloud_sprite = pygame.transform.scale(pygame.image.load(os.path.join(
+            'Assets', 'sprites', 'Cloud.png')), (self.cloud_width, self.cloud_height))
 
         self._generate_cacti()
+        self._generate_clouds()
 
     def draw_horizon(self, screen: pygame.Surface) -> None:
         """draw horizon"""
@@ -120,7 +129,7 @@ class Environment:
                         self.horizon_offset_x, self.horizon_y))
 
     def draw_cacti(self, screen: pygame.Surface) -> None:
-        """draw cacti"""
+        """Draw cacti"""
         # Displaying the obstacles
         for cactus in self.cacti:
             cactus_image = pygame.transform.scale(
@@ -132,6 +141,21 @@ class Environment:
         if (self.cacti[-1].x + self.cactus_offset_x) < 0:
             # Generate a new set of obstacles:
             self._generate_cacti()
+
+    def draw_clouds(self, screen: pygame.Surface) -> None:
+        """Draw clouds"""
+        for cloud in self.clouds:
+            screen.blit(self.cloud_sprite, (cloud.x +
+                        self.cloud_offset_x, cloud.y))
+
+        # When the first cloud goes off left edge, generate new set of clouds
+        if len(self.clouds) > 0:
+            if (self.clouds[0].x + self.cloud_offset_x + 50) < 0:
+                self._generate_clouds()
+        else:
+            self._generate_clouds()
+
+        # print((self.clouds[0].x + self.cloud_offset_x))
 
     def detect_collision(self, dino_rect: pygame.Rect) -> None:
         """Detect collision with dino"""
@@ -145,6 +169,7 @@ class Environment:
         """animate environment elements"""
         self.horizon_offset_x -= self.horizon_vel
         self.cactus_offset_x -= self.horizon_vel
+        self.cloud_offset_x -= self.cloud_vel
 
         if abs(self.horizon_offset_x) > self.screen_width + 100:
             self.horizon_offset_x = 0
@@ -173,6 +198,16 @@ class Environment:
 
             self.cacti.append(pygame.Rect(
                 cactus_x, cactus_y, self.cactus_width, cactus_height))
+
+    def _generate_clouds(self) -> None:
+        starting_point = 100
+        if len(self.clouds) > 0:
+            starting_point = self.clouds[-1].x
+            self.clouds = self.clouds[1:]
+
+        num_clouds = random.randint(0, 3)
+        self.clouds.extend([pygame.Rect(starting_point + (i+1)*150, (i+1)*20,
+                           self.cloud_width, self.cloud_height) for i in range(num_clouds)])
 
 
 # Constants
@@ -229,8 +264,10 @@ class GameController:
         self.window.fill(WHITE)
 
         self.environment.detect_collision(self.dino.rect)
+
         self.environment.draw_horizon(screen=self.window)
         self.environment.draw_cacti(screen=self.window)
+        self.environment.draw_clouds(screen=self.window)
 
         self._display_score()
 
