@@ -165,6 +165,7 @@ class Environment:
 
 # Constants
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
 # User Events
 SWITCH_FOOT = pygame.USEREVENT + 1
@@ -190,9 +191,21 @@ class GameController:
         self.is_playing = False
         self.clock = pygame.time.Clock()
 
+        self.score = 0
+        self.highscore = 0
+        self.font_size = 15
+        self.score_font = pygame.font.Font(os.path.join(
+            'Assets', 'fonts', 'PressStart2P.ttf'), self.font_size)
+        self.score_x = self.screen_width - 100
+        self.score_y = 20
+
         self.environment = Environment(
             screen_height=self.screen_height, screen_width=self.screen_width)
         self.dino = Dino(screen_height=self.screen_height)
+
+    def _display_score(self) -> None:
+        img = self.score_font.render(f'{self.score:05}', True, BLACK)
+        self.window.blit(img, (self.score_x, self.score_y))
 
     def draw(self) -> None:
         self.window.fill(WHITE)
@@ -200,6 +213,8 @@ class GameController:
         self.environment.detect_collision(self.dino.rect)
         self.environment.draw_horizon(screen=self.window)
         self.environment.draw_cacti(screen=self.window)
+
+        self._display_score()
 
         if self.is_playing:
             self.dino.update(screen=self.window)
@@ -220,6 +235,11 @@ class GameController:
                 if event.type == SWITCH_FOOT:
                     # left_foot = not left_foot
                     self.dino.switch_foot()
+
+                    # After every meter run, increment score
+                    # A meter run is determined by whether the Dino has extended both legs
+                    if self.dino.left_foot:
+                        self.score += 1
 
                 # Fires when collision is detected, The game pauses
                 if event.type == COLLISION_DETECTED:
