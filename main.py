@@ -79,9 +79,13 @@ class Dino:
         """Draws Dino before game play starts."""
         screen.blit(self.standing_sprite, (self.x, self.y - self.offset_y))
 
-    def switch_foot(self):
+    def switch_foot(self) -> None:
         """Trigger a change in sprite between left_foot and right foot"""
         self.left_foot = not self.left_foot
+
+    def reset(self) -> None:
+        """Reset the Dinosaur's state"""
+        self.offset_y = 0
 
 
 # TODO: Refactor Environment into seperate class
@@ -145,6 +149,14 @@ class Environment:
         if abs(self.horizon_offset_x) > self.screen_width + 100:
             self.horizon_offset_x = 0
 
+    def reset(self) -> None:
+        """Reset the state of the environment"""
+        self.cacti.clear()
+        self._generate_cacti()
+
+        self.horizon_offset_x = 0
+        self.cactus_offset_x = 0
+
     def _generate_cacti(self) -> None:
         """Utility function: generate new set of obstacles"""
         starting_point = 0
@@ -189,6 +201,7 @@ class GameController:
 
         self.running = True
         self.is_playing = False
+        self.paused = False
         self.clock = pygame.time.Clock()
 
         self.score = 0
@@ -204,7 +217,12 @@ class GameController:
         self.dino = Dino(screen_height=self.screen_height)
 
     def _display_score(self) -> None:
-        img = self.score_font.render(f'{self.score:05}', True, BLACK)
+        if self.highscore > 0:
+            score_text = f'HI {self.highscore:05} {self.score:05}'
+        else:
+            score_text = f'{self.score:05}'
+
+        img = self.score_font.render(score_text, True, BLACK)
         self.window.blit(img, (self.score_x, self.score_y))
 
     def draw(self) -> None:
@@ -244,6 +262,14 @@ class GameController:
                 # Fires when collision is detected, The game pauses
                 if event.type == COLLISION_DETECTED:
                     self.is_playing = False
+                    self.paused = True
+
+                    # Determine if we have a high score or not.
+                    if self.score > self.highscore:
+                        self.highscore = self.score
+
+                        # Ensures that the score fits the screen
+                        self.score_x = self.screen_width - 230
 
             self.draw()
 
@@ -256,6 +282,14 @@ class GameController:
 
                 # Start playing game when SPACE pressed
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+
+                    # If we're restarting, clear away obstacles from path
+                    if self.paused:
+                        self.environment.reset()
+                        self.score = 0
+
+                        self.paused = False
+
                     self.is_playing = True
 
             self.play()
