@@ -7,6 +7,10 @@ import random
 
 pygame.init()
 
+JUMP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'jump.wav'))
+DIE_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'die.wav'))
+POINT_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'point.wav'))
+
 
 class Dino:
     """Dino class"""
@@ -40,7 +44,11 @@ class Dino:
         # init jumping when SPACE pressed
         if keys[pygame.K_SPACE] and not self.falling:
 
-            self.jumping = True
+            if not self.jumping:
+                # Play jump sound
+                pygame.mixer.Sound.play(JUMP_SOUND)
+
+                self.jumping = True
 
             if (self.y - self.offset_y) > self.max_height:
                 self.offset_y += self.jump_pace
@@ -296,8 +304,15 @@ class GameController:
                     if self.dino.left_foot:
                         self.score += 1
 
+                    # After every 100 points earned, play Point sound.
+                    if self.score % 100 == 0:
+                        pygame.mixer.Sound.play(POINT_SOUND)
+
                 # Fires when collision is detected, The game pauses
                 if event.type == COLLISION_DETECTED:
+                    # Play die sound
+                    pygame.mixer.Sound.play(DIE_SOUND)
+
                     self.is_playing = False
                     self.paused = True
 
