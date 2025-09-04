@@ -7,6 +7,8 @@ import random
 
 pygame.init()
 
+JUMP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'jump.wav'))
+
 
 class Dino:
     """Dino class"""
@@ -40,7 +42,11 @@ class Dino:
         # init jumping when SPACE pressed
         if keys[pygame.K_SPACE] and not self.falling:
 
-            self.jumping = True
+            if not self.jumping:
+                # Play jump sound
+                pygame.mixer.Sound.play(JUMP_SOUND)
+
+                self.jumping = True
 
             if (self.y - self.offset_y) > self.max_height:
                 self.offset_y += self.jump_pace
