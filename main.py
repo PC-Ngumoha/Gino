@@ -9,6 +9,7 @@ pygame.init()
 
 JUMP_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'jump.wav'))
 DIE_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'die.wav'))
+POINT_SOUND = pygame.mixer.Sound(os.path.join('Assets', 'tracks', 'point.wav'))
 
 
 class Dino:
@@ -302,6 +303,10 @@ class GameController:
                     # A meter run is determined by whether the Dino has extended both legs
                     if self.dino.left_foot:
                         self.score += 1
+
+                    # After every 100 points earned, play Point sound.
+                    if self.score % 100 == 0:
+                        pygame.mixer.Sound.play(POINT_SOUND)
 
                 # Fires when collision is detected, The game pauses
                 if event.type == COLLISION_DETECTED:
