@@ -91,9 +91,9 @@ class Dino:
         """Trigger a change in sprite between left_foot and right foot"""
         self.left_foot = not self.left_foot
 
-    # def reset(self) -> None:
-    #     """Reset the Dinosaur's state"""
-    #     self.offset_y = 0
+    def reset(self) -> None:
+        """Reset the Dinosaur's state"""
+        self.offset_y = 0
 
 
 # TODO: Refactor Environment into seperate class
@@ -244,7 +244,7 @@ class GameController:
 
         self.running = True
         self.is_playing = False
-        self.paused = False
+        # self.paused = False
         self.clock = pygame.time.Clock()
 
         self.score = 0
@@ -271,11 +271,11 @@ class GameController:
     def draw(self) -> None:
         self.window.fill(WHITE)
 
-        self.environment.detect_collision(self.dino.rect)
-
         self.environment.draw_horizon(screen=self.window)
         self.environment.draw_cacti(screen=self.window)
         self.environment.draw_clouds(screen=self.window)
+
+        self.environment.detect_collision(self.dino.rect)
 
         self._display_score()
 
@@ -314,7 +314,7 @@ class GameController:
                     pygame.mixer.Sound.play(DIE_SOUND)
 
                     self.is_playing = False
-                    self.paused = True
+                    # self.paused = True
 
                     # Determine if we have a high score or not.
                     if self.score > self.highscore:
@@ -336,12 +336,10 @@ class GameController:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 
                     # If we're restarting, clear away obstacles from path
-                    if self.paused:
-                        self.environment.reset()
-                        self.score = 0
 
-                        self.paused = False
-
+                    self.environment.reset()
+                    # # self.dino.reset()
+                    self.score = 0
                     self.is_playing = True
 
             self.play()
