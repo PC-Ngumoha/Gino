@@ -245,15 +245,21 @@ class GameController:
         self.running = True
         self.is_playing = False
         # self.paused = False
+        self.game_over = False
+
         self.clock = pygame.time.Clock()
 
         self.score = 0
         self.highscore = 0
-        self.font_size = 15
+
         self.score_font = pygame.font.Font(os.path.join(
-            'Assets', 'fonts', 'PressStart2P.ttf'), self.font_size)
+            'Assets', 'fonts', 'PressStart2P.ttf'), 15)
+        self.game_over_font = pygame.font.Font(os.path.join(
+            'Assets', 'fonts', 'PressStart2P.ttf'), 30)
+        self.game_over_instr_font = pygame.font.Font(os.path.join(
+            'Assets', 'fonts', 'PressStart2P.ttf'), 11)
         self.score_x = self.screen_width - 100
-        self.score_y = 20
+        # self.score_y = 20
 
         self.environment = Environment(
             screen_height=self.screen_height, screen_width=self.screen_width)
@@ -266,7 +272,20 @@ class GameController:
             score_text = f'{self.score:05}'
 
         img = self.score_font.render(score_text, True, BLACK)
-        self.window.blit(img, (self.score_x, self.score_y))
+        self.window.blit(img, (self.score_x, 20))
+
+    def _display_game_over(self) -> None:
+        center_y = self.screen_height//2
+        center_x = self.screen_width//2
+
+        game_over = self.game_over_font.render("GAME OVER", True, BLACK)
+        instruction = self.game_over_instr_font.render(
+            "Hit SPACE key to restart", True, BLACK)
+
+        self.window.blit(game_over, (center_x - game_over.get_width() //
+                         2, center_y - game_over.get_height()))
+        self.window.blit(
+            instruction, (center_x - instruction.get_width()//2, center_y))
 
     def draw(self) -> None:
         self.window.fill(WHITE)
@@ -285,6 +304,9 @@ class GameController:
 
         else:
             self.dino.draw(screen=self.window)
+
+            if self.game_over:
+                self._display_game_over()
 
         pygame.display.update()
 
@@ -314,6 +336,7 @@ class GameController:
                     pygame.mixer.Sound.play(DIE_SOUND)
 
                     self.is_playing = False
+                    self.game_over = True
                     # self.paused = True
 
                     # Determine if we have a high score or not.
@@ -340,6 +363,7 @@ class GameController:
                     self.environment.reset()
                     # # self.dino.reset()
                     self.score = 0
+                    self.game_over = False
                     self.is_playing = True
 
             self.play()
