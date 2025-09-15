@@ -42,5 +42,4 @@ jobs:
           files: |
             dist/*
             dist/*.app
-            dist/*.exe
           tag_name: ${{ github.ref_name }}
