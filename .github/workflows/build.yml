@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'  # Only build when you push a new version tag e.g v1.0
 
+permissions:
+  contents: write  # allow creating releases + uploading assets
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}
@@ -36,7 +39,8 @@ jobs:
       - name: Upload to release
         uses: softprops/action-gh-release@v1
         with:
-          name: Gino_${{ matrix.os }}
-          files: dist/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            dist/*
+            dist/*.app
+            dist/*.exe
+          tag_name: ${{ github.ref_name }}
