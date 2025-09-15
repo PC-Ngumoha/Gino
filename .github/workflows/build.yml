@@ -1,4 +1,4 @@
-# Builds the Gino into an executable for Windows & MacOS
+# Builds the Gino into an executable for Windows & MacOS & Ubuntu
 name: Build Pygame Executables
 
 on:
