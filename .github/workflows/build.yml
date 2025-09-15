@@ -33,8 +33,10 @@ jobs:
         run: |
           pyinstaller --onefile --windowed main.py
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
         with:
           name: Gino_${{ matrix.os }}
           path: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
