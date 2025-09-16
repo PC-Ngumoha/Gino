@@ -1,14 +1,47 @@
-# Gino
-A replica of the Google Chrome Dino game made with Python's Pygame module. This is meant to be an educational project to teach programmers new to Pygame how to build games using the Framework. Below are the links to the various stages of the code development as addressed in the blog series:
+# Gino Game
 
-- [Part 1: Init & Startup](https://github.com/PC-Ngumoha/Gino/tree/part-1_init_and_startup)
+A simple and engaging game built with modern technologies.
 
-- [Part 2: Infinite Horizons](https://github.com/PC-Ngumoha/Gino/tree/part-2)
+## Installation
 
-- [Part 3: Running Dino](https://github.com/PC-Ngumoha/Gino/tree/part-3)
+1. Clone the repository:
+```bash
+git clone https://github.com/PC-Ngumoha/Gino.git
+cd Gino
+```
 
-- [Part 4: Jumping Dino](https://github.com/PC-Ngumoha/Gino/tree/part-4)
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-- [Part 5: Deadly Cactus](https://github.com/PC-Ngumoha/Gino/tree/part-5)
+## Getting Started
 
-- [Part 6: Refactoring](https://github.com/PC-Ngumoha/Gino/tree/part-6)
+1. Start the game:
+```bash
+python main.py
+```
+
+2. Play the game:
+
+
+## Game Controls
+
+- Start Game: __SPACE__ key
+- Jump: __SPACE__ key
+- Restart Game: __SPACE__ key
+
+## Features
+
+- Running Dinosaur
+- Progressively generated cactus obstacles
+- Score tracking (with high score functionality)
+- Sound effects for when the Dinosaur jumps, dies or Hits a checkpoint (Usually every 100 steps).
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
