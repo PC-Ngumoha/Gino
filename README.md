@@ -1,6 +1,8 @@
 # Gino Game
 
-A simple and engaging game built with modern technologies.
+A simplified replica of the popular Chrome dinosaur game made using __Pygame__.
+
+![Demo of final game play of Gino game](https://i.ibb.co/bMQZ9kyT/gino.gif)
 
 ## Installation
 
